@@ -3,22 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Raspberry Pi 5 Webアプリ構築 カリキュラム</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+JP:wght@300;400;700;900&display=swap" rel="stylesheet">
+<title>Raspberry Pi 5 × Claude — AI搭載ワークステーション構築カリキュラム</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+JP:wght@300;400;700;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0e1a;
-    --surface: #111827;
-    --surface2: #1a2235;
-    --accent: #00ff88;
-    --accent2: #00b8ff;
-    --accent3: #ff6b35;
-    --text: #e2e8f0;
-    --text-muted: #64748b;
-    --border: #1e2d45;
+    --bg: #070b12;
+    --surface: #0d1422;
+    --surface2: #121d30;
+    --surface3: #1a2640;
+    --border: #1e3050;
+    --text: #dde6f0;
+    --text-muted: #4a6080;
+    --text-dim: #8aa0bc;
+
+    --green: #00ff88;
+    --blue: #00b8ff;
+    --orange: #ff7a30;
+    --purple: #b46cff;
+    --yellow: #ffd000;
+    --pink: #ff3c78;
+    --cyan: #00e5cc;
+    --claude: #cc785c;
+    --docker: #2496ed;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
 
   body {
     background: var(--bg);
@@ -28,274 +39,428 @@
     overflow-x: hidden;
   }
 
-  /* Animated background grid */
+  /* Scanline overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Grid background */
   body::before {
     content: '';
     position: fixed;
     inset: 0;
     background-image:
-      linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
+      linear-gradient(rgba(0,184,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,184,255,0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
     pointer-events: none;
     z-index: 0;
   }
 
-  .container {
-    max-width: 960px;
+  .wrap {
+    max-width: 1000px;
     margin: 0 auto;
-    padding: 40px 24px 80px;
+    padding: 48px 24px 100px;
     position: relative;
     z-index: 1;
   }
 
-  /* Header */
+  /* ─── HEADER ─── */
   header {
-    text-align: center;
-    margin-bottom: 60px;
+    margin-bottom: 64px;
     animation: fadeDown 0.8s ease;
   }
 
-  .badge {
-    display: inline-block;
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    padding: 4px 12px;
-    border-radius: 2px;
-    letter-spacing: 3px;
-    margin-bottom: 20px;
-    text-transform: uppercase;
-  }
-
-  h1 {
-    font-size: clamp(28px, 5vw, 48px);
-    font-weight: 900;
-    line-height: 1.2;
-    margin-bottom: 16px;
-  }
-
-  h1 span {
-    color: var(--accent);
-    position: relative;
-  }
-
-  .subtitle {
-    color: var(--text-muted);
-    font-size: 15px;
-    font-weight: 300;
-    line-height: 1.7;
-    max-width: 560px;
-    margin: 0 auto 32px;
-  }
-
-  /* Stats bar */
-  .stats {
+  .header-top {
     display: flex;
-    justify-content: center;
-    gap: 40px;
-    margin-bottom: 60px;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
     flex-wrap: wrap;
   }
 
-  .stat {
-    text-align: center;
+  .chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 5px 12px;
+    border-radius: 3px;
+    text-transform: uppercase;
   }
 
-  .stat-num {
-    font-family: 'Space Mono', monospace;
-    font-size: 32px;
-    font-weight: 700;
-    color: var(--accent);
-    display: block;
+  .chip-green  { background: rgba(0,255,136,0.1);  color: var(--green);  border: 1px solid rgba(0,255,136,0.2); }
+  .chip-blue   { background: rgba(0,184,255,0.1);  color: var(--blue);   border: 1px solid rgba(0,184,255,0.2); }
+  .chip-claude { background: rgba(204,120,92,0.1); color: var(--claude); border: 1px solid rgba(204,120,92,0.2); }
+  .chip-docker { background: rgba(36,150,237,0.1); color: var(--docker); border: 1px solid rgba(36,150,237,0.2); }
+
+  h1 {
+    font-size: clamp(26px, 4.5vw, 44px);
+    font-weight: 900;
+    line-height: 1.15;
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
   }
 
-  .stat-label {
-    font-size: 12px;
-    color: var(--text-muted);
-    letter-spacing: 1px;
+  h1 em {
+    font-style: normal;
+    color: var(--green);
+    position: relative;
   }
 
-  /* Progress overview */
-  .progress-bar-wrap {
+  h1 em::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--green);
+    opacity: 0.4;
+  }
+
+  .tagline {
+    font-size: 14px;
+    color: var(--text-dim);
+    font-weight: 300;
+    line-height: 1.8;
+    max-width: 600px;
+    border-left: 2px solid var(--border);
+    padding-left: 16px;
+  }
+
+  /* ─── STATS ─── */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 40px;
+    animation: fadeUp 0.6s ease 0.1s both;
+  }
+
+  .stat-card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 20px 28px;
-    margin-bottom: 48px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .stat-card .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--blue);
+    display: block;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-card .lbl {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+  }
+
+  /* ─── PROGRESS ─── */
+  .progress-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 40px;
     animation: fadeUp 0.6s ease 0.2s both;
   }
 
-  .progress-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 12px;
-    color: var(--accent);
-    white-space: nowrap;
-    min-width: 80px;
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
   }
 
-  .bar-outer {
-    flex: 1;
-    height: 8px;
-    background: var(--border);
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
-  .bar-inner {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    border-radius: 4px;
-    width: 0%;
-    transition: width 1s ease 0.5s;
+  .progress-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--blue);
+    letter-spacing: 2px;
   }
 
   .progress-pct {
-    font-family: 'Space Mono', monospace;
-    font-size: 13px;
-    color: var(--text-muted);
-    min-width: 40px;
-    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--green);
   }
 
-  /* Phase cards */
-  .phase {
+  .bar-track {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green), var(--blue));
+    border-radius: 3px;
+    width: 0%;
+    transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .progress-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ─── FILTER TABS ─── */
+  .filter-bar {
+    display: flex;
+    gap: 8px;
     margin-bottom: 32px;
+    flex-wrap: wrap;
+    animation: fadeUp 0.6s ease 0.3s both;
+  }
+
+  .filter-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 7px 16px;
+    border-radius: 4px;
     border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .filter-btn:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+  }
+
+  .filter-btn.active {
+    background: rgba(0,184,255,0.1);
+    border-color: var(--blue);
+    color: var(--blue);
+  }
+
+  .filter-btn.claude-btn.active {
+    background: rgba(204,120,92,0.1);
+    border-color: var(--claude);
+    color: var(--claude);
+  }
+
+  /* ─── PHASE CARDS ─── */
+  .phase {
+    margin-bottom: 16px;
     border-radius: 12px;
     overflow: hidden;
+    border: 1px solid var(--border);
     background: var(--surface);
-    animation: fadeUp 0.6s ease both;
-    transition: box-shadow 0.3s;
+    transition: box-shadow 0.3s, border-color 0.3s;
+    animation: fadeUp 0.5s ease both;
   }
 
   .phase:hover {
-    box-shadow: 0 0 40px rgba(0,255,136,0.05);
+    border-color: var(--surface3);
   }
+
+  .phase.hidden { display: none; }
+
+  /* Phase accent colors */
+  .phase[data-color="green"]  { --pc: var(--green); }
+  .phase[data-color="blue"]   { --pc: var(--blue); }
+  .phase[data-color="orange"] { --pc: var(--orange); }
+  .phase[data-color="purple"] { --pc: var(--purple); }
+  .phase[data-color="yellow"] { --pc: var(--yellow); }
+  .phase[data-color="pink"]   { --pc: var(--pink); }
+  .phase[data-color="cyan"]   { --pc: var(--cyan); }
+  .phase[data-color="claude"] { --pc: var(--claude); }
+  .phase[data-color="docker"] { --pc: var(--docker); }
 
   .phase-header {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 20px 24px;
+    gap: 14px;
+    padding: 18px 20px;
     cursor: pointer;
     user-select: none;
     border-bottom: 1px solid transparent;
     transition: border-color 0.3s;
+    position: relative;
   }
+
+  .phase-header::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--pc);
+    opacity: 0.6;
+    border-radius: 0 0 0 12px;
+    transition: opacity 0.2s;
+  }
+
+  .phase:hover .phase-header::before { opacity: 1; }
 
   .phase.open .phase-header {
     border-bottom-color: var(--border);
   }
 
-  .phase-num {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    color: var(--text-muted);
-    min-width: 32px;
-  }
-
   .phase-icon {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 18px;
     flex-shrink: 0;
+    background: color-mix(in srgb, var(--pc) 12%, transparent);
   }
 
-  .phase-info {
-    flex: 1;
+  .phase-info { flex: 1; min-width: 0; }
+
+  .phase-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--pc);
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+    opacity: 0.8;
   }
 
   .phase-title {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
-    margin-bottom: 4px;
+    color: var(--text);
+    margin-bottom: 3px;
   }
 
   .phase-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .claude-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    background: rgba(204,120,92,0.15);
+    color: var(--claude);
+    border: 1px solid rgba(204,120,92,0.3);
+    letter-spacing: 1px;
+    flex-shrink: 0;
+    align-self: center;
+  }
+
+  .docker-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    background: rgba(36,150,237,0.15);
+    color: var(--docker);
+    border: 1px solid rgba(36,150,237,0.3);
+    letter-spacing: 1px;
+    flex-shrink: 0;
+    align-self: center;
+  }
+
+  .phase-prog {
+    font-family: 'JetBrains Mono', monospace;
     font-size: 12px;
     color: var(--text-muted);
-    font-family: 'Space Mono', monospace;
-    display: flex;
-    gap: 16px;
+    margin-right: 8px;
+    flex-shrink: 0;
   }
 
   .phase-toggle {
     color: var(--text-muted);
-    font-size: 20px;
-    transition: transform 0.3s;
+    font-size: 16px;
+    transition: transform 0.3s, color 0.2s;
+    flex-shrink: 0;
   }
 
   .phase.open .phase-toggle {
     transform: rotate(180deg);
-    color: var(--accent);
+    color: var(--pc);
   }
 
+  /* Body */
   .phase-body {
     display: none;
-    padding: 24px;
+    padding: 20px 24px;
   }
 
-  .phase.open .phase-body {
-    display: block;
-  }
+  .phase.open .phase-body { display: block; }
 
-  /* Lessons list */
-  .lessons {
-    list-style: none;
-    margin-bottom: 20px;
-  }
+  /* ─── LESSONS ─── */
+  .lessons { list-style: none; margin-bottom: 16px; }
 
   .lesson {
     display: flex;
     align-items: flex-start;
     gap: 12px;
-    padding: 10px 0;
+    padding: 11px 0;
     border-bottom: 1px solid var(--border);
     cursor: pointer;
-    transition: padding-left 0.2s;
+    transition: padding-left 0.15s;
   }
 
   .lesson:last-child { border-bottom: none; }
-  .lesson:hover { padding-left: 6px; }
+  .lesson:hover { padding-left: 4px; }
 
-  .lesson-check {
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--border);
+  .chk {
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--border);
     border-radius: 4px;
     flex-shrink: 0;
-    margin-top: 2px;
+    margin-top: 3px;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
-    cursor: pointer;
+    font-size: 11px;
   }
 
-  .lesson.done .lesson-check {
-    background: var(--accent);
-    border-color: var(--accent);
+  .lesson.done .chk {
+    background: var(--pc);
+    border-color: var(--pc);
     color: #000;
-    font-size: 12px;
+    font-weight: 700;
   }
 
-  .lesson-text {
-    flex: 1;
-  }
+  .lesson-content { flex: 1; }
 
   .lesson-name {
-    font-size: 14px;
-    font-weight: 400;
-    margin-bottom: 2px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text);
+    transition: color 0.2s;
   }
 
   .lesson.done .lesson-name {
@@ -303,619 +468,596 @@
     color: var(--text-muted);
   }
 
-  .lesson-tags {
+  .tags {
     display: flex;
-    gap: 6px;
+    gap: 5px;
     flex-wrap: wrap;
-    margin-top: 4px;
+    margin-top: 5px;
   }
 
   .tag {
-    font-size: 10px;
-    font-family: 'Space Mono', monospace;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
     padding: 2px 7px;
     border-radius: 3px;
     letter-spacing: 0.5px;
+    text-transform: uppercase;
   }
 
-  .tag-cmd { background: rgba(0,255,136,0.1); color: var(--accent); }
-  .tag-cfg { background: rgba(0,184,255,0.1); color: var(--accent2); }
-  .tag-web { background: rgba(255,107,53,0.1); color: var(--accent3); }
-  .tag-db  { background: rgba(180,100,255,0.1); color: #b46cff; }
+  .t-cli    { background: rgba(0,255,136,0.08);  color: var(--green); }
+  .t-net    { background: rgba(0,184,255,0.08);  color: var(--blue); }
+  .t-web    { background: rgba(255,122,48,0.08); color: var(--orange); }
+  .t-db     { background: rgba(180,108,255,0.08);color: var(--purple); }
+  .t-sec    { background: rgba(255,208,0,0.08);  color: var(--yellow); }
+  .t-claude { background: rgba(204,120,92,0.1);  color: var(--claude); }
+  .t-docker { background: rgba(36,150,237,0.1);  color: var(--docker); }
+  .t-py     { background: rgba(0,229,204,0.08);  color: var(--cyan); }
 
-  /* Tip boxes */
+  /* Tip */
   .tip {
     background: var(--surface2);
-    border-left: 3px solid var(--accent2);
-    border-radius: 0 6px 6px 0;
+    border-left: 2px solid var(--blue);
     padding: 12px 16px;
-    font-size: 13px;
-    color: var(--text-muted);
-    margin-top: 16px;
-    line-height: 1.6;
+    border-radius: 0 6px 6px 0;
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    margin-top: 4px;
   }
 
-  .tip strong { color: var(--accent2); }
+  .tip strong { color: var(--blue); }
 
-  /* Phase color accents */
-  .p1 .phase-icon { background: rgba(0,255,136,0.1); }
-  .p2 .phase-icon { background: rgba(0,184,255,0.1); }
-  .p3 .phase-icon { background: rgba(255,107,53,0.1); }
-  .p4 .phase-icon { background: rgba(180,100,255,0.1); }
-  .p5 .phase-icon { background: rgba(255,200,0,0.1); }
-  .p6 .phase-icon { background: rgba(255,60,120,0.1); }
+  /* ─── SECTION DIVIDER ─── */
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 40px 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
 
-  .p1 .phase-title { color: var(--accent); }
-  .p2 .phase-title { color: var(--accent2); }
-  .p3 .phase-title { color: var(--accent3); }
-  .p4 .phase-title { color: #b46cff; }
-  .p5 .phase-title { color: #ffc800; }
-  .p6 .phase-title { color: #ff3c78; }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
 
-  /* Checklist summary */
-  .phase-progress {
-    font-family: 'Space Mono', monospace;
+  .section-label.claude-section { color: var(--claude); }
+  .section-label.claude-section::after { background: rgba(204,120,92,0.2); }
+  .section-label.docker-section { color: var(--docker); }
+  .section-label.docker-section::after { background: rgba(36,150,237,0.2); }
+
+  /* ─── RESET ─── */
+  .reset-btn {
+    display: block;
+    margin: 40px auto 0;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 9px 22px;
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .reset-btn:hover { border-color: var(--pink); color: var(--pink); }
+
+  /* ─── FOOTER ─── */
+  footer {
+    margin-top: 80px;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
     color: var(--text-muted);
-    margin-left: auto;
-    margin-right: 12px;
+    line-height: 2;
   }
 
-  /* Footer */
-  footer {
-    text-align: center;
-    margin-top: 60px;
-    font-size: 12px;
-    color: var(--text-muted);
-    font-family: 'Space Mono', monospace;
-  }
+  footer .hl { color: var(--green); }
+  footer .hl2 { color: var(--claude); }
 
-  footer span { color: var(--accent); }
-
-  /* Animations */
+  /* ─── ANIMATIONS ─── */
   @keyframes fadeDown {
-    from { opacity: 0; transform: translateY(-20px); }
+    from { opacity: 0; transform: translateY(-16px); }
     to   { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
+    from { opacity: 0; transform: translateY(16px); }
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  .phase:nth-child(1) { animation-delay: 0.1s; }
-  .phase:nth-child(2) { animation-delay: 0.2s; }
-  .phase:nth-child(3) { animation-delay: 0.3s; }
-  .phase:nth-child(4) { animation-delay: 0.4s; }
-  .phase:nth-child(5) { animation-delay: 0.5s; }
-  .phase:nth-child(6) { animation-delay: 0.6s; }
-
-  /* Reset button */
-  .reset-btn {
-    display: block;
-    margin: 24px auto 0;
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text-muted);
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    padding: 8px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-    letter-spacing: 1px;
-    transition: all 0.2s;
-  }
-
-  .reset-btn:hover {
-    border-color: var(--accent3);
-    color: var(--accent3);
-  }
-
   @media (max-width: 600px) {
-    .stats { gap: 24px; }
-    .phase-meta { flex-direction: column; gap: 4px; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .phase-meta { gap: 8px; }
+    h1 { font-size: 24px; }
   }
 </style>
 </head>
 <body>
-<div class="container">
+<div class="wrap">
 
+  <!-- HEADER -->
   <header>
-    <div class="badge">📡 学習ロードマップ</div>
-    <h1>Raspberry Pi 5 で<br><span>Webアプリを公開する</span></h1>
-    <p class="subtitle">初心者から始めて、自分のWebサーバを立て、MySQLを使ったWebアプリをインターネットに公開するまでの完全カリキュラム。</p>
+    <div class="header-top">
+      <span class="chip chip-green">🍓 Raspberry Pi 5</span>
+      <span class="chip chip-blue">Webサーバ構築</span>
+      <span class="chip chip-claude">Claude AI</span>
+      <span class="chip chip-docker">Docker</span>
+    </div>
+    <h1>AI搭載 <em>ONESTOP</em> マシン<br>構築カリキュラム</h1>
+    <p class="tagline">
+      初心者から始めて、Webサーバ・MySQL・Webアプリ・DDNS公開・Claude Code・Dockerまで。<br>
+      格安でAI搭載ワークステーション兼Webサーバを作り上げる完全ロードマップ。
+    </p>
   </header>
 
+  <!-- STATS -->
   <div class="stats">
-    <div class="stat"><span class="stat-num">6</span><span class="stat-label">フェーズ</span></div>
-    <div class="stat"><span class="stat-num">36</span><span class="stat-label">レッスン</span></div>
-    <div class="stat"><span class="stat-num">8〜12</span><span class="stat-label">週間（目安）</span></div>
-    <div class="stat"><span class="stat-num" id="done-count">0</span><span class="stat-label">完了済み ✓</span></div>
+    <div class="stat-card"><span class="num">12</span><span class="lbl">フェーズ</span></div>
+    <div class="stat-card"><span class="num">60</span><span class="lbl">レッスン</span></div>
+    <div class="stat-card"><span class="num">5</span><span class="lbl">Claude連携</span></div>
+    <div class="stat-card"><span class="num" id="done-count">0</span><span class="lbl">完了済み ✓</span></div>
   </div>
 
-  <div class="progress-bar-wrap">
-    <span class="progress-label">PROGRESS</span>
-    <div class="bar-outer"><div class="bar-inner" id="main-bar"></div></div>
-    <span class="progress-pct" id="main-pct">0%</span>
+  <!-- PROGRESS -->
+  <div class="progress-section">
+    <div class="progress-header">
+      <span class="progress-title">// OVERALL PROGRESS</span>
+      <span class="progress-pct" id="main-pct">0%</span>
+    </div>
+    <div class="bar-track"><div class="bar-fill" id="main-bar"></div></div>
+    <span class="progress-sub" id="progress-sub">0 / 60 レッスン完了</span>
   </div>
 
-  <!-- PHASES -->
-  <div id="phases">
-
-    <!-- Phase 1 -->
-    <div class="phase p1" data-phase="1">
-      <div class="phase-header" onclick="togglePhase(this)">
-        <span class="phase-num">01</span>
-        <div class="phase-icon">🍓</div>
-        <div class="phase-info">
-          <div class="phase-title">Raspberry Pi 5 セットアップ</div>
-          <div class="phase-meta">
-            <span>⏱ 1〜2週間</span>
-            <span>📖 6レッスン</span>
-          </div>
-        </div>
-        <span class="phase-progress" id="prog-1">0/6</span>
-        <span class="phase-toggle">▾</span>
-      </div>
-      <div class="phase-body">
-        <ul class="lessons" data-phase="1">
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">必要な機材を揃える（Pi5本体・SDカード・電源・ケース）</div>
-              <div class="lesson-tags"><span class="tag tag-cfg">準備</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">Raspberry Pi OS（64bit）をSDカードに書き込む</div>
-              <div class="lesson-tags"><span class="tag tag-cmd">CLI</span><span class="tag tag-cfg">セットアップ</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">初回起動・日本語化・WiFi設定</div>
-              <div class="lesson-tags"><span class="tag tag-cfg">設定</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">SSH接続の有効化（PCからリモートアクセス）</div>
-              <div class="lesson-tags"><span class="tag tag-cmd">CLI</span><span class="tag tag-cfg">SSH</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">Linux基本コマンドを覚える（ls / cd / sudo / apt）</div>
-              <div class="lesson-tags"><span class="tag tag-cmd">CLI</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">システム更新・固定IPアドレスの設定</div>
-              <div class="lesson-tags"><span class="tag tag-cmd">CLI</span><span class="tag tag-cfg">ネットワーク</span></div>
-            </div>
-          </li>
-        </ul>
-        <div class="tip">💡 <strong>ポイント：</strong>最初はディスプレイ・キーボードを繋いで作業し、SSH接続が確認できたらそれ以降はPCから操作するのがスマートです。</div>
-      </div>
-    </div>
-
-    <!-- Phase 2 -->
-    <div class="phase p2" data-phase="2">
-      <div class="phase-header" onclick="togglePhase(this)">
-        <span class="phase-num">02</span>
-        <div class="phase-icon">🌐</div>
-        <div class="phase-info">
-          <div class="phase-title">Nginxでローカル Webサーバ構築</div>
-          <div class="phase-meta">
-            <span>⏱ 1週間</span>
-            <span>📖 6レッスン</span>
-          </div>
-        </div>
-        <span class="phase-progress" id="prog-2">0/6</span>
-        <span class="phase-toggle">▾</span>
-      </div>
-      <div class="phase-body">
-        <ul class="lessons" data-phase="2">
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">Nginxとは何か？Apacheとの違いを理解する</div>
-              <div class="lesson-tags"><span class="tag tag-web">Web</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">Nginxをインストール・起動する</div>
-              <div class="lesson-tags"><span class="tag tag-cmd">CLI</span><span class="tag tag-web">Web</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">HTML/CSSで自分のトップページを作ってみる</div>
-              <div class="lesson-tags"><span class="tag tag-web">Web</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">LAN内の別デバイスからアクセス確認する</div>
-              <div class="lesson-tags"><span class="tag tag-cfg">ネットワーク</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">Nginx設定ファイルの構造を理解する（server block）</div>
-              <div class="lesson-tags"><span class="tag tag-cfg">設定</span><span class="tag tag-web">Web</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">ファイアウォール（UFW）で必要なポートを開放する</div>
-              <div class="lesson-tags"><span class="tag tag-cfg">セキュリティ</span></div>
-            </div>
-          </li>
-        </ul>
-        <div class="tip">💡 <strong>ポイント：</strong>まずは「ローカルで動く」ことを確認してから外部公開に進みましょう。焦らず段階的に！</div>
-      </div>
-    </div>
-
-    <!-- Phase 3 -->
-    <div class="phase p3" data-phase="3">
-      <div class="phase-header" onclick="togglePhase(this)">
-        <span class="phase-num">03</span>
-        <div class="phase-icon">📡</div>
-        <div class="phase-info">
-          <div class="phase-title">DDNSでインターネット公開</div>
-          <div class="phase-meta">
-            <span>⏱ 1週間</span>
-            <span>📖 6レッスン</span>
-          </div>
-        </div>
-        <span class="phase-progress" id="prog-3">0/6</span>
-        <span class="phase-toggle">▾</span>
-      </div>
-      <div class="phase-body">
-        <ul class="lessons" data-phase="3">
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">グローバルIP・ポート・ルーターの仕組みを理解する</div>
-              <div class="lesson-tags"><span class="tag tag-cfg">ネットワーク</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">DDNSサービスに登録する（No-IP / DuckDNS など）</div>
-              <div class="lesson-tags"><span class="tag tag-cfg">DDNS</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">ルーターでポートフォワーディング（80番・443番）を設定する</div>
-              <div class="lesson-tags"><span class="tag tag-cfg">ネットワーク</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">DDNSクライアントをRaspberry Piで自動更新設定する</div>
-              <div class="lesson-tags"><span class="tag tag-cmd">CLI</span><span class="tag tag-cfg">自動化</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">Let's Encrypt（Certbot）でSSL証明書を取得する（HTTPS化）</div>
-              <div class="lesson-tags"><span class="tag tag-cfg">セキュリティ</span><span class="tag tag-web">HTTPS</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">スマホから自分のドメインにアクセスして動作確認！</div>
-              <div class="lesson-tags"><span class="tag tag-web">確認</span></div>
-            </div>
-          </li>
-        </ul>
-        <div class="tip">💡 <strong>ポイント：</strong>プロバイダによっては80番ポートを閉じている場合があります。その場合は8080番など別ポートで試すか、Cloudflare Tunnelも選択肢です。</div>
-      </div>
-    </div>
-
-    <!-- Phase 4 -->
-    <div class="phase p4" data-phase="4">
-      <div class="phase-header" onclick="togglePhase(this)">
-        <span class="phase-num">04</span>
-        <div class="phase-icon">🗄️</div>
-        <div class="phase-info">
-          <div class="phase-title">MySQL導入とデータベース基礎</div>
-          <div class="phase-meta">
-            <span>⏱ 1〜2週間</span>
-            <span>📖 6レッスン</span>
-          </div>
-        </div>
-        <span class="phase-progress" id="prog-4">0/6</span>
-        <span class="phase-toggle">▾</span>
-      </div>
-      <div class="phase-body">
-        <ul class="lessons" data-phase="4">
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">データベースとは何か？RDBMSの概念を理解する</div>
-              <div class="lesson-tags"><span class="tag tag-db">DB</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">MySQL（MariaDB）をインストール・初期設定する</div>
-              <div class="lesson-tags"><span class="tag tag-cmd">CLI</span><span class="tag tag-db">DB</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">基本SQL文を覚える（CREATE / INSERT / SELECT / UPDATE / DELETE）</div>
-              <div class="lesson-tags"><span class="tag tag-db">SQL</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">ユーザーと権限を作成する（セキュリティ設定）</div>
-              <div class="lesson-tags"><span class="tag tag-db">DB</span><span class="tag tag-cfg">セキュリティ</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">テーブル設計をしてみる（例：ブログ記事テーブル）</div>
-              <div class="lesson-tags"><span class="tag tag-db">設計</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">phpMyAdminでGUI管理する（任意）</div>
-              <div class="lesson-tags"><span class="tag tag-web">Web</span><span class="tag tag-db">DB</span></div>
-            </div>
-          </li>
-        </ul>
-        <div class="tip">💡 <strong>ポイント：</strong>Raspberry PiにはMariaDB（MySQLの互換版）が推奨されます。使い方はほぼ同じです。</div>
-      </div>
-    </div>
-
-    <!-- Phase 5 -->
-    <div class="phase p5" data-phase="5">
-      <div class="phase-header" onclick="togglePhase(this)">
-        <span class="phase-num">05</span>
-        <div class="phase-icon">⚡</div>
-        <div class="phase-info">
-          <div class="phase-title">Webアプリ開発（Python + Flask）</div>
-          <div class="phase-meta">
-            <span>⏱ 2〜3週間</span>
-            <span>📖 6レッスン</span>
-          </div>
-        </div>
-        <span class="phase-progress" id="prog-5">0/6</span>
-        <span class="phase-toggle">▾</span>
-      </div>
-      <div class="phase-body">
-        <ul class="lessons" data-phase="5">
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">Pythonの基礎を習得する（変数・関数・リスト・ループ）</div>
-              <div class="lesson-tags"><span class="tag tag-cmd">Python</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">Flaskをインストールして「Hello World」アプリを作る</div>
-              <div class="lesson-tags"><span class="tag tag-cmd">Python</span><span class="tag tag-web">Flask</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">HTMLテンプレート（Jinja2）でページを動的に表示する</div>
-              <div class="lesson-tags"><span class="tag tag-web">Web</span><span class="tag tag-cmd">Python</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">FlaskからMySQLに接続してデータを取得・表示する</div>
-              <div class="lesson-tags"><span class="tag tag-db">DB</span><span class="tag tag-web">Flask</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">フォームからデータを受け取ってDBに保存する（CRUD完成）</div>
-              <div class="lesson-tags"><span class="tag tag-web">Web</span><span class="tag tag-db">DB</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">ログイン認証機能を実装する（セッション管理）</div>
-              <div class="lesson-tags"><span class="tag tag-cfg">セキュリティ</span><span class="tag tag-web">Flask</span></div>
-            </div>
-          </li>
-        </ul>
-        <div class="tip">💡 <strong>ポイント：</strong>Flaskは小さくシンプルなフレームワークで初心者に最適。まず「動くもの」を作ってから機能を追加していきましょう。</div>
-      </div>
-    </div>
-
-    <!-- Phase 6 -->
-    <div class="phase p6" data-phase="6">
-      <div class="phase-header" onclick="togglePhase(this)">
-        <span class="phase-num">06</span>
-        <div class="phase-icon">🚀</div>
-        <div class="phase-info">
-          <div class="phase-title">本番公開・運用・セキュリティ</div>
-          <div class="phase-meta">
-            <span>⏱ 1〜2週間</span>
-            <span>📖 6レッスン</span>
-          </div>
-        </div>
-        <span class="phase-progress" id="prog-6">0/6</span>
-        <span class="phase-toggle">▾</span>
-      </div>
-      <div class="phase-body">
-        <ul class="lessons" data-phase="6">
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">GunicornでFlaskアプリを本番用に起動する</div>
-              <div class="lesson-tags"><span class="tag tag-cmd">CLI</span><span class="tag tag-web">本番</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">NginxとGunicornをリバースプロキシで連携する</div>
-              <div class="lesson-tags"><span class="tag tag-cfg">設定</span><span class="tag tag-web">Web</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">systemdでアプリを自動起動に設定する</div>
-              <div class="lesson-tags"><span class="tag tag-cmd">CLI</span><span class="tag tag-cfg">自動化</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">Fail2ban・SSH鍵認証でセキュリティを強化する</div>
-              <div class="lesson-tags"><span class="tag tag-cfg">セキュリティ</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">MySQLの自動バックアップをcronで設定する</div>
-              <div class="lesson-tags"><span class="tag tag-db">DB</span><span class="tag tag-cfg">自動化</span></div>
-            </div>
-          </li>
-          <li class="lesson" onclick="toggleLesson(this)">
-            <div class="lesson-check">✓</div>
-            <div class="lesson-text">
-              <div class="lesson-name">🎉 完成！友人・家族に自分のWebアプリURLを共有しよう</div>
-              <div class="lesson-tags"><span class="tag tag-web">完成</span></div>
-            </div>
-          </li>
-        </ul>
-        <div class="tip">💡 <strong>ポイント：</strong>公開したら終わりではありません。ログ監視・OS更新・証明書の更新（自動化推奨）を定期的に行いましょう。</div>
-      </div>
-    </div>
-
+  <!-- FILTER TABS -->
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="setFilter('all', this)">ALL</button>
+    <button class="filter-btn" onclick="setFilter('core', this)">コア</button>
+    <button class="filter-btn claude-btn" onclick="setFilter('claude', this)">🤖 Claude</button>
+    <button class="filter-btn" onclick="setFilter('docker', this)">🐳 Docker</button>
   </div>
 
-  <button class="reset-btn" onclick="resetAll()">↺ 進捗をリセット</button>
+  <!-- ══════════════════════════════════════════ -->
+  <!-- CORE PHASES -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="section-label">// コアカリキュラム</div>
+
+  <!-- Phase 1 -->
+  <div class="phase" data-phase="1" data-color="green" data-type="core" style="animation-delay:0.05s">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-icon">🍓</div>
+      <div class="phase-info">
+        <div class="phase-num">PHASE 01</div>
+        <div class="phase-title">Raspberry Pi 5 セットアップ</div>
+        <div class="phase-meta"><span>⏱ 1〜2週間</span><span>📖 6レッスン</span></div>
+      </div>
+      <span class="phase-prog" id="prog-1">0/6</span>
+      <span class="phase-toggle">▾</span>
+    </div>
+    <div class="phase-body">
+      <ul class="lessons" data-phase="1">
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">必要な機材を揃える（Pi5本体・SDカード・電源・ケース）</div><div class="tags"><span class="tag t-cli">準備</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Raspberry Pi OS（64bit）をSDカードに書き込む</div><div class="tags"><span class="tag t-cli">CLI</span><span class="tag t-net">セットアップ</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">初回起動・日本語化・WiFi設定</div><div class="tags"><span class="tag t-net">設定</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">SSH接続の有効化（PCからリモートアクセス）</div><div class="tags"><span class="tag t-cli">SSH</span><span class="tag t-sec">セキュリティ</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Linux基本コマンドを覚える（ls / cd / sudo / apt）</div><div class="tags"><span class="tag t-cli">CLI</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">システム更新・固定IPアドレスの設定</div><div class="tags"><span class="tag t-cli">CLI</span><span class="tag t-net">ネットワーク</span></div></div></li>
+      </ul>
+      <div class="tip">💡 <strong>ポイント：</strong>最初はディスプレイ・キーボードを繋いで作業し、SSH確認後はPCからの操作に切り替えましょう。</div>
+    </div>
+  </div>
+
+  <!-- Phase 2 -->
+  <div class="phase" data-phase="2" data-color="blue" data-type="core" style="animation-delay:0.1s">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-icon">🌐</div>
+      <div class="phase-info">
+        <div class="phase-num">PHASE 02</div>
+        <div class="phase-title">Nginxでローカル Webサーバ構築</div>
+        <div class="phase-meta"><span>⏱ 1週間</span><span>📖 6レッスン</span></div>
+      </div>
+      <span class="phase-prog" id="prog-2">0/6</span>
+      <span class="phase-toggle">▾</span>
+    </div>
+    <div class="phase-body">
+      <ul class="lessons" data-phase="2">
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Nginxとは何か？Apacheとの違いを理解する</div><div class="tags"><span class="tag t-web">Web</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Nginxをインストール・起動する</div><div class="tags"><span class="tag t-cli">CLI</span><span class="tag t-web">Web</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">HTML/CSSで自分のトップページを作ってみる</div><div class="tags"><span class="tag t-web">Web</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">LAN内の別デバイスからアクセス確認する</div><div class="tags"><span class="tag t-net">ネットワーク</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Nginx設定ファイルの構造を理解する（server block）</div><div class="tags"><span class="tag t-web">Web</span><span class="tag t-cli">設定</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">ファイアウォール（UFW）で必要なポートを開放する</div><div class="tags"><span class="tag t-sec">セキュリティ</span></div></div></li>
+      </ul>
+      <div class="tip">💡 <strong>ポイント：</strong>まずはローカルで動かすことを確認。焦らず段階的に進みましょう。</div>
+    </div>
+  </div>
+
+  <!-- Phase 3 -->
+  <div class="phase" data-phase="3" data-color="orange" data-type="core" style="animation-delay:0.15s">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-icon">📡</div>
+      <div class="phase-info">
+        <div class="phase-num">PHASE 03</div>
+        <div class="phase-title">DDNSでインターネット公開</div>
+        <div class="phase-meta"><span>⏱ 1週間</span><span>📖 6レッスン</span></div>
+      </div>
+      <span class="phase-prog" id="prog-3">0/6</span>
+      <span class="phase-toggle">▾</span>
+    </div>
+    <div class="phase-body">
+      <ul class="lessons" data-phase="3">
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">グローバルIP・ポート・ルーターの仕組みを理解する</div><div class="tags"><span class="tag t-net">ネットワーク</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">DDNSサービスに登録する（No-IP / DuckDNS など）</div><div class="tags"><span class="tag t-net">DDNS</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">ルーターでポートフォワーディング（80・443番）を設定する</div><div class="tags"><span class="tag t-net">ネットワーク</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">DDNSクライアントをRaspberry Piで自動更新設定する</div><div class="tags"><span class="tag t-cli">CLI</span><span class="tag t-net">自動化</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Let's Encrypt（Certbot）でSSL証明書を取得（HTTPS化）</div><div class="tags"><span class="tag t-sec">セキュリティ</span><span class="tag t-web">HTTPS</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">🎉 スマホから自分のドメインにアクセス確認！</div><div class="tags"><span class="tag t-web">確認</span></div></div></li>
+      </ul>
+      <div class="tip">💡 <strong>ポイント：</strong>NUROはポート開放が必要。プロバイダが80番を閉じている場合はCloudflare Tunnelも選択肢です。</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- CLAUDE PHASES -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="section-label claude-section">// Claude AI 連携</div>
+
+  <!-- Phase 3.5 -->
+  <div class="phase" data-phase="3.5" data-color="claude" data-type="claude" style="animation-delay:0.2s">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-icon">🤖</div>
+      <div class="phase-info">
+        <div class="phase-num">PHASE 03.5</div>
+        <div class="phase-title">Claude Code インストール・基本操作</div>
+        <div class="phase-meta"><span>⏱ 1週間</span><span>📖 5レッスン</span></div>
+      </div>
+      <span class="claude-badge">CLAUDE</span>
+      <span class="phase-prog" id="prog-3.5">0/5</span>
+      <span class="phase-toggle">▾</span>
+    </div>
+    <div class="phase-body">
+      <ul class="lessons" data-phase="3.5">
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Claude Code とは何か？できることを理解する</div><div class="tags"><span class="tag t-claude">Claude</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Node.js をインストールして Claude Code を導入する</div><div class="tags"><span class="tag t-cli">CLI</span><span class="tag t-claude">Claude</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">APIキーを設定して認証する</div><div class="tags"><span class="tag t-claude">Claude</span><span class="tag t-sec">設定</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Claude Code に質問しながらコードを書いてもらう</div><div class="tags"><span class="tag t-claude">Claude</span><span class="tag t-py">Python</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Chromium ブラウザで claude.ai にアクセスして連携確認</div><div class="tags"><span class="tag t-claude">Claude</span><span class="tag t-web">Web</span></div></div></li>
+      </ul>
+      <div class="tip">💡 <strong>ポイント：</strong>Claude Code は Raspberry Pi 5（64bit・8GB）で動作確認済みです。インストールまで約15〜30分。</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- CORE PHASES CONTINUE -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="section-label">// データベース & アプリ開発</div>
+
+  <!-- Phase 4 -->
+  <div class="phase" data-phase="4" data-color="purple" data-type="core" style="animation-delay:0.25s">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-icon">🗄️</div>
+      <div class="phase-info">
+        <div class="phase-num">PHASE 04</div>
+        <div class="phase-title">MySQL導入とデータベース基礎</div>
+        <div class="phase-meta"><span>⏱ 1〜2週間</span><span>📖 6レッスン</span></div>
+      </div>
+      <span class="phase-prog" id="prog-4">0/6</span>
+      <span class="phase-toggle">▾</span>
+    </div>
+    <div class="phase-body">
+      <ul class="lessons" data-phase="4">
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">データベースとは何か？RDBMSの概念を理解する</div><div class="tags"><span class="tag t-db">DB</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">MySQL（MariaDB）をインストール・初期設定する</div><div class="tags"><span class="tag t-cli">CLI</span><span class="tag t-db">DB</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">基本SQL文を覚える（CREATE / INSERT / SELECT / UPDATE / DELETE）</div><div class="tags"><span class="tag t-db">SQL</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">ユーザーと権限を作成する（セキュリティ設定）</div><div class="tags"><span class="tag t-db">DB</span><span class="tag t-sec">セキュリティ</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">テーブル設計をしてみる（例：ブログ記事テーブル）</div><div class="tags"><span class="tag t-db">設計</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">phpMyAdminでGUI管理する（任意）</div><div class="tags"><span class="tag t-web">Web</span><span class="tag t-db">DB</span></div></div></li>
+      </ul>
+      <div class="tip">💡 <strong>ポイント：</strong>Raspberry PiにはMariaDB（MySQLの互換版）が推奨。使い方はほぼ同じです。</div>
+    </div>
+  </div>
+
+  <!-- Phase 4.5 -->
+  <div class="phase" data-phase="4.5" data-color="claude" data-type="claude" style="animation-delay:0.3s">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-icon">🤖</div>
+      <div class="phase-info">
+        <div class="phase-num">PHASE 04.5</div>
+        <div class="phase-title">Claude Code × MySQL（DB設計・SQL生成）</div>
+        <div class="phase-meta"><span>⏱ 1週間</span><span>📖 5レッスン</span></div>
+      </div>
+      <span class="claude-badge">CLAUDE</span>
+      <span class="phase-prog" id="prog-4.5">0/5</span>
+      <span class="phase-toggle">▾</span>
+    </div>
+    <div class="phase-body">
+      <ul class="lessons" data-phase="4.5">
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Claude にテーブル設計を相談してみる</div><div class="tags"><span class="tag t-claude">Claude</span><span class="tag t-db">DB</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Claude に SQL 文を生成してもらい実行する</div><div class="tags"><span class="tag t-claude">Claude</span><span class="tag t-db">SQL</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">エラーが出たら Claude にデバッグしてもらう</div><div class="tags"><span class="tag t-claude">Claude</span><span class="tag t-db">DB</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">業務データのテーブル設計を Claude と一緒に考える</div><div class="tags"><span class="tag t-claude">Claude</span><span class="tag t-db">設計</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Claude Code でDB操作スクリプトを自動生成する</div><div class="tags"><span class="tag t-claude">Claude</span><span class="tag t-py">Python</span></div></div></li>
+      </ul>
+      <div class="tip">💡 <strong>ポイント：</strong>「このテーブルでこういうデータを管理したい」と日本語で相談するだけでSQLを作ってくれます。</div>
+    </div>
+  </div>
+
+  <!-- Phase 5 -->
+  <div class="phase" data-phase="5" data-color="yellow" data-type="core" style="animation-delay:0.35s">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-icon">⚡</div>
+      <div class="phase-info">
+        <div class="phase-num">PHASE 05</div>
+        <div class="phase-title">Webアプリ開発（Python + Flask）</div>
+        <div class="phase-meta"><span>⏱ 2〜3週間</span><span>📖 6レッスン</span></div>
+      </div>
+      <span class="phase-prog" id="prog-5">0/6</span>
+      <span class="phase-toggle">▾</span>
+    </div>
+    <div class="phase-body">
+      <ul class="lessons" data-phase="5">
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Pythonの基礎を習得する（変数・関数・リスト・ループ）</div><div class="tags"><span class="tag t-py">Python</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Flaskをインストールして「Hello World」アプリを作る</div><div class="tags"><span class="tag t-py">Python</span><span class="tag t-web">Flask</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">HTMLテンプレート（Jinja2）でページを動的に表示する</div><div class="tags"><span class="tag t-web">Web</span><span class="tag t-py">Python</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">FlaskからMySQLに接続してデータを取得・表示する</div><div class="tags"><span class="tag t-db">DB</span><span class="tag t-web">Flask</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">フォームからデータを受け取ってDBに保存する（CRUD完成）</div><div class="tags"><span class="tag t-web">Web</span><span class="tag t-db">DB</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">ログイン認証機能を実装する（セッション管理）</div><div class="tags"><span class="tag t-sec">セキュリティ</span><span class="tag t-web">Flask</span></div></div></li>
+      </ul>
+      <div class="tip">💡 <strong>ポイント：</strong>Flaskは小さくシンプルで初心者に最適。まず「動くもの」を作ってから機能を追加！</div>
+    </div>
+  </div>
+
+  <!-- Phase 5.5 -->
+  <div class="phase" data-phase="5.5" data-color="claude" data-type="claude" style="animation-delay:0.4s">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-icon">🤖</div>
+      <div class="phase-info">
+        <div class="phase-num">PHASE 05.5</div>
+        <div class="phase-title">Claude Code × Flask（アプリ開発支援）</div>
+        <div class="phase-meta"><span>⏱ 1〜2週間</span><span>📖 5レッスン</span></div>
+      </div>
+      <span class="claude-badge">CLAUDE</span>
+      <span class="phase-prog" id="prog-5.5">0/5</span>
+      <span class="phase-toggle">▾</span>
+    </div>
+    <div class="phase-body">
+      <ul class="lessons" data-phase="5.5">
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">作りたいWebアプリを Claude に説明してコードを生成してもらう</div><div class="tags"><span class="tag t-claude">Claude</span><span class="tag t-web">Flask</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">エラーメッセージを Claude に貼り付けてデバッグする</div><div class="tags"><span class="tag t-claude">Claude</span><span class="tag t-py">Python</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Claude に UI デザインの HTML/CSS を作ってもらう</div><div class="tags"><span class="tag t-claude">Claude</span><span class="tag t-web">Web</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">業務アプリのロジックを Claude と一緒に設計する</div><div class="tags"><span class="tag t-claude">Claude</span><span class="tag t-py">設計</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Claude Code でテストコードを自動生成・実行する</div><div class="tags"><span class="tag t-claude">Claude</span><span class="tag t-py">Python</span></div></div></li>
+      </ul>
+      <div class="tip">💡 <strong>ポイント：</strong>「こういう機能を作りたい」と日本語で伝えるだけでコードを書いてくれます。エラーもそのまま貼ればOK。</div>
+    </div>
+  </div>
+
+  <!-- Phase 6 -->
+  <div class="phase" data-phase="6" data-color="pink" data-type="core" style="animation-delay:0.45s">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-icon">🚀</div>
+      <div class="phase-info">
+        <div class="phase-num">PHASE 06</div>
+        <div class="phase-title">本番公開・運用・セキュリティ</div>
+        <div class="phase-meta"><span>⏱ 1〜2週間</span><span>📖 6レッスン</span></div>
+      </div>
+      <span class="phase-prog" id="prog-6">0/6</span>
+      <span class="phase-toggle">▾</span>
+    </div>
+    <div class="phase-body">
+      <ul class="lessons" data-phase="6">
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">GunicornでFlaskアプリを本番用に起動する</div><div class="tags"><span class="tag t-cli">CLI</span><span class="tag t-web">本番</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">NginxとGunicornをリバースプロキシで連携する</div><div class="tags"><span class="tag t-web">Web</span><span class="tag t-cli">設定</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">systemdでアプリを自動起動に設定する</div><div class="tags"><span class="tag t-cli">CLI</span><span class="tag t-net">自動化</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Fail2ban・SSH鍵認証でセキュリティを強化する</div><div class="tags"><span class="tag t-sec">セキュリティ</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">MySQLの自動バックアップをcronで設定する</div><div class="tags"><span class="tag t-db">DB</span><span class="tag t-net">自動化</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">🎉 完成！URLを仲間・社員に共有しよう</div><div class="tags"><span class="tag t-web">完成</span></div></div></li>
+      </ul>
+      <div class="tip">💡 <strong>ポイント：</strong>公開後はログ監視・OS更新・SSL証明書の自動更新を定期的に行いましょう。</div>
+    </div>
+  </div>
+
+  <!-- Phase 6.5 -->
+  <div class="phase" data-phase="6.5" data-color="claude" data-type="claude" style="animation-delay:0.5s">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-icon">🤖</div>
+      <div class="phase-info">
+        <div class="phase-num">PHASE 06.5</div>
+        <div class="phase-title">Claude Desktop（非公式）・Cowork導入</div>
+        <div class="phase-meta"><span>⏱ 1週間</span><span>📖 5レッスン</span></div>
+      </div>
+      <span class="claude-badge">CLAUDE</span>
+      <span class="phase-prog" id="prog-6.5">0/5</span>
+      <span class="phase-toggle">▾</span>
+    </div>
+    <div class="phase-body">
+      <ul class="lessons" data-phase="6.5">
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Claude Desktop（Linux ARM64版・非公式）とは何かを理解する</div><div class="tags"><span class="tag t-claude">Claude</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">非公式ビルドスクリプトでClaude Desktopをインストールする</div><div class="tags"><span class="tag t-cli">CLI</span><span class="tag t-claude">Claude</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Coworkの機能を試す（ファイル操作・タスク自動化）</div><div class="tags"><span class="tag t-claude">Claude</span><span class="tag t-net">自動化</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">業務ファイルの自動整理・レポート生成を試す</div><div class="tags"><span class="tag t-claude">Claude</span><span class="tag t-net">自動化</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">社員向けにClaude活用ガイドをまとめる</div><div class="tags"><span class="tag t-claude">Claude</span></div></div></li>
+      </ul>
+      <div class="tip">💡 <strong>注意：</strong>Claude Desktop Linux版は非公式です。安定性は保証されませんが、動作報告は多数あります。</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- DOCKER PHASES -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="section-label docker-section">// Docker 発展編</div>
+
+  <!-- Phase 7 -->
+  <div class="phase" data-phase="7" data-color="docker" data-type="docker" style="animation-delay:0.55s">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-icon">🐳</div>
+      <div class="phase-info">
+        <div class="phase-num">PHASE 07</div>
+        <div class="phase-title">Docker導入・コンテナ化</div>
+        <div class="phase-meta"><span>⏱ 2週間</span><span>📖 6レッスン</span></div>
+      </div>
+      <span class="docker-badge">DOCKER</span>
+      <span class="phase-prog" id="prog-7">0/6</span>
+      <span class="phase-toggle">▾</span>
+    </div>
+    <div class="phase-body">
+      <ul class="lessons" data-phase="7">
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Dockerとは何か？コンテナの概念を理解する</div><div class="tags"><span class="tag t-docker">Docker</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Raspberry Pi 5 に Docker をインストールする</div><div class="tags"><span class="tag t-cli">CLI</span><span class="tag t-docker">Docker</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">既存のFlaskアプリをDockerコンテナ化する</div><div class="tags"><span class="tag t-docker">Docker</span><span class="tag t-py">Python</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">docker-composeでNginx・Flask・MySQLを一括管理する</div><div class="tags"><span class="tag t-docker">Docker</span><span class="tag t-db">DB</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Portainerで Web GUI からコンテナを管理する</div><div class="tags"><span class="tag t-docker">Docker</span><span class="tag t-web">Web</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">複数アプリ（Python・Node.js・PHP）を同時に動かす</div><div class="tags"><span class="tag t-docker">Docker</span><span class="tag t-web">Web</span></div></div></li>
+      </ul>
+      <div class="tip">💡 <strong>ポイント：</strong>Dockerを使うと環境が壊れにくく作り直しも簡単。慣れてから導入するのが正解！</div>
+    </div>
+  </div>
+
+  <!-- Phase 7.5 -->
+  <div class="phase" data-phase="7.5" data-color="claude" data-type="claude docker" style="animation-delay:0.6s">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-icon">🤖</div>
+      <div class="phase-info">
+        <div class="phase-num">PHASE 07.5</div>
+        <div class="phase-title">Claude × Docker（自動化・クラウド化）</div>
+        <div class="phase-meta"><span>⏱ 1〜2週間</span><span>📖 5レッスン</span></div>
+      </div>
+      <span class="claude-badge">CLAUDE</span>
+      <span class="docker-badge">DOCKER</span>
+      <span class="phase-prog" id="prog-7.5">0/5</span>
+      <span class="phase-toggle">▾</span>
+    </div>
+    <div class="phase-body">
+      <ul class="lessons" data-phase="7.5">
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Claude Code に Dockerfile を作ってもらう</div><div class="tags"><span class="tag t-claude">Claude</span><span class="tag t-docker">Docker</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">docker-compose.yml の設計を Claude に相談する</div><div class="tags"><span class="tag t-claude">Claude</span><span class="tag t-docker">Docker</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">Claude Code でデプロイスクリプトを自動生成する</div><div class="tags"><span class="tag t-claude">Claude</span><span class="tag t-net">自動化</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">社員向け業務アプリをコンテナ化して配布する</div><div class="tags"><span class="tag t-claude">Claude</span><span class="tag t-docker">Docker</span></div></div></li>
+        <li class="lesson" onclick="toggleLesson(this)"><div class="chk">✓</div><div class="lesson-content"><div class="lesson-name">🎉 AI搭載 ONESTOP マシン完成！社内展開へ</div><div class="tags"><span class="tag t-claude">Claude</span><span class="tag t-docker">Docker</span></div></div></li>
+      </ul>
+      <div class="tip">💡 <strong>ゴール：</strong>Raspberry Pi 5 がWebサーバ・DB・AI開発環境・自動化ツールを全部担う「格安クラウド」の完成です！</div>
+    </div>
+  </div>
+
+  <button class="reset-btn" onclick="resetAll()">↺ RESET PROGRESS</button>
 
   <footer>
-    <p>Built for <span>Raspberry Pi 5</span> · Nginx · MySQL · Flask · DDNS</p>
-    <p style="margin-top:8px;color:#334155;">チェックを入れながら進めましょう — 進捗は自動保存されます</p>
+    <p><span class="hl">Raspberry Pi 5</span> × Nginx × MySQL × Flask × <span class="hl2">Claude Code</span> × Docker</p>
+    <p>チェックを入れながら進めましょう — 進捗はブラウザに自動保存されます</p>
   </footer>
 
 </div>
 
 <script>
-  const TOTAL = 36;
+  // Total lessons per phase
+  const PHASES = {
+    '1': 6, '2': 6, '3': 6,
+    '3.5': 5,
+    '4': 6,
+    '4.5': 5,
+    '5': 6,
+    '5.5': 5,
+    '6': 6,
+    '6.5': 5,
+    '7': 6,
+    '7.5': 5
+  };
+  const TOTAL = Object.values(PHASES).reduce((a,b) => a+b, 0);
 
   function getState() {
-    try {
-      return JSON.parse(localStorage.getItem('rpi-curriculum') || '{}');
-    } catch(e) { return {}; }
+    try { return JSON.parse(localStorage.getItem('rpi5-v2') || '{}'); }
+    catch(e) { return {}; }
   }
 
-  function saveState(state) {
-    localStorage.setItem('rpi-curriculum', JSON.stringify(state));
+  function saveState(s) {
+    localStorage.setItem('rpi5-v2', JSON.stringify(s));
   }
 
   function togglePhase(header) {
-    const phase = header.closest('.phase');
-    phase.classList.toggle('open');
+    header.closest('.phase').classList.toggle('open');
   }
 
   function toggleLesson(li) {
     li.classList.toggle('done');
-    const state = getState();
     const phaseEl = li.closest('[data-phase]');
-    const phaseNum = phaseEl.dataset.phase;
+    const p = phaseEl.dataset.phase;
     const lessons = Array.from(phaseEl.querySelectorAll('.lesson'));
     const idx = lessons.indexOf(li);
-    const key = `p${phaseNum}_${idx}`;
-    if (li.classList.contains('done')) {
-      state[key] = true;
-    } else {
-      delete state[key];
-    }
+    const state = getState();
+    const key = `p${p}_${idx}`;
+    if (li.classList.contains('done')) state[key] = true;
+    else delete state[key];
     saveState(state);
     updateProgress();
   }
 
   function updateProgress() {
     const state = getState();
-    let total = 0;
-    for (let p = 1; p <= 6; p++) {
+    let totalDone = 0;
+    for (const p in PHASES) {
       let done = 0;
       const phaseEl = document.querySelector(`[data-phase="${p}"]`);
+      if (!phaseEl) continue;
       const lessons = phaseEl.querySelectorAll('.lesson');
       lessons.forEach((li, idx) => {
-        const key = `p${p}_${idx}`;
-        if (state[key]) {
-          li.classList.add('done');
-          done++;
-        } else {
-          li.classList.remove('done');
-        }
+        if (state[`p${p}_${idx}`]) { li.classList.add('done'); done++; }
+        else li.classList.remove('done');
       });
-      document.getElementById(`prog-${p}`).textContent = `${done}/${lessons.length}`;
-      total += done;
+      const prog = document.getElementById(`prog-${p}`);
+      if (prog) prog.textContent = `${done}/${PHASES[p]}`;
+      totalDone += done;
     }
-    const pct = Math.round(total / TOTAL * 100);
+    const pct = Math.round(totalDone / TOTAL * 100);
     document.getElementById('main-bar').style.width = pct + '%';
     document.getElementById('main-pct').textContent = pct + '%';
-    document.getElementById('done-count').textContent = total;
+    document.getElementById('done-count').textContent = totalDone;
+    document.getElementById('progress-sub').textContent = `${totalDone} / ${TOTAL} レッスン完了`;
+  }
+
+  function setFilter(type, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    document.querySelectorAll('.phase').forEach(p => {
+      const pt = p.dataset.type || '';
+      if (type === 'all') {
+        p.classList.remove('hidden');
+      } else if (type === 'claude') {
+        p.classList.toggle('hidden', !pt.includes('claude'));
+      } else if (type === 'docker') {
+        p.classList.toggle('hidden', !pt.includes('docker'));
+      } else if (type === 'core') {
+        p.classList.toggle('hidden', pt !== 'core');
+      }
+    });
+
+    // Hide section labels when filtering
+    document.querySelectorAll('.section-label').forEach(l => {
+      l.style.display = type === 'all' ? '' : 'none';
+    });
   }
 
   function resetAll() {
     if (confirm('進捗をリセットしますか？')) {
-      localStorage.removeItem('rpi-curriculum');
+      localStorage.removeItem('rpi5-v2');
       updateProgress();
     }
   }
 
   // Init
   updateProgress();
-  // Animate bar on load
-  setTimeout(() => {
-    const state = getState();
-    const total = Object.keys(state).length;
-    const pct = Math.round(total / TOTAL * 100);
-    document.getElementById('main-bar').style.width = pct + '%';
-  }, 100);
-
-  // Open first phase by default
-  document.querySelector('.phase').classList.add('open');
+  // Open Phase 1 by default
+  const first = document.querySelector('.phase');
+  if (first) first.classList.add('open');
 </script>
 </body>
 </html>
